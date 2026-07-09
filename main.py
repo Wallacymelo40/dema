@@ -28,13 +28,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+IQ_Option = None
+IQ_IMPORT_ERROR: str | None = None
 try:
     from iqoptionapi.stable_api import IQ_Option  # type: ignore
 except Exception as exc:  # pragma: no cover
-    raise RuntimeError(
-        "Dependência iqoptionapi não instalada. Rode: "
-        "python -m pip install -r requirements.txt"
-    ) from exc
+    IQ_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
 
 load_dotenv()
 
@@ -115,6 +114,8 @@ def _ensure_conn() -> Any:
 
 
 def _do_connect() -> tuple[bool, str]:
+    if IQ_Option is None:
+        return False, f"Biblioteca iqoptionapi indisponível no servidor ({IQ_IMPORT_ERROR}). Verifique requirements.txt."
     if not IQ_EMAIL or not IQ_PASSWORD:
         return False, "Configure IQ_EMAIL e IQ_PASSWORD nas variáveis de ambiente do Render."
 
