@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: dema-backend
+    runtime: python
+    plan: free
+    buildCommand: python -m pip install --upgrade pip setuptools wheel && python -m pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ACCOUNT_TYPE
+        value: PRACTICE
+      - key: DEFAULT_STAKE
+        value: "1"
+      - key: DEFAULT_EXPIRATION
+        value: "1"
+      - key: MIN_PAYOUT
+        value: "75"
+      - key: MARTINGALE_LEVELS
+        value: "0"
+      - key: MARTINGALE_FACTOR
+        value: "2.2"
+      - key: STOP_WIN_DAILY
+        value: "20"
+      - key: STOP_LOSS_DAILY
+        value: "15"
+      - key: POLL_SECONDS
+        value: "5"
+      - key: ALLOWED_ORIGINS
+        value: "*"

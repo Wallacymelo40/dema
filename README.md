@@ -1,55 +1,103 @@
-# DEMA v7 — IQ Option Backend (FastAPI)
+# DEMA v7 IQ Backend — corrigido para Render
 
-Ponte entre o painel Lovable e sua conta IQ Option, usando o fork
-[`n1nj4z33/iqoptionapi`](https://github.com/n1nj4z33/iqoptionapi).
+Este pacote já corrige o problema do Render usando Python 3.14. Ele força Python **3.11.9** com `runtime.txt`, `.python-version`, `render.yaml` e também inclui `Dockerfile` caso você escolha Docker.
 
-## 1. Rodar local
+## O que subir no GitHub
+
+Suba os arquivos **soltos** no repositório, não suba o ZIP fechado.
+
+Arquivos obrigatórios:
+
+- `main.py`
+- `requirements.txt`
+- `runtime.txt`
+- `.python-version`
+- `Procfile`
+- `.env.example`
+- `README.md`
+
+Arquivos opcionais, mas recomendados:
+
+- `Dockerfile`
+- `render.yaml`
+- `.gitignore`
+
+## Configuração no Render — opção mais simples
+
+Crie/edite o Web Service assim:
+
+- **Runtime/Language:** Python 3
+- **Build Command:**
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env      # edita IQ_EMAIL / IQ_PASSWORD
-uvicorn main:app --reload --port 8000
+python -m pip install --upgrade pip setuptools wheel && python -m pip install -r requirements.txt
 ```
 
-Testa:
+- **Start Command:**
+
 ```bash
-curl -X POST http://localhost:8000/connect
-curl http://localhost:8000/status
-curl http://localhost:8000/assets
-curl -X POST http://localhost:8000/autotrade/start
+uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
-## 2. Deploy no Render (grátis)
+- **Environment Variables:**
 
-1. Sobe essa pasta num repo GitHub.
-2. render.com → New → Web Service → conecta o repo.
-3. Runtime: **Python 3.11**. Build: `pip install -r requirements.txt`. Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`.
-4. Environment → cola as vars do `.env` (IQ_EMAIL, IQ_PASSWORD, etc).
-5. Deploy → pega a URL `https://seu-app.onrender.com`.
+```env
+PYTHON_VERSION=3.11.9
+IQ_EMAIL=seu_email_da_iq
+IQ_PASSWORD=sua_senha_da_iq
+ACCOUNT_TYPE=PRACTICE
+DEFAULT_STAKE=1
+DEFAULT_EXPIRATION=1
+MIN_PAYOUT=75
+MARTINGALE_LEVELS=0
+MARTINGALE_FACTOR=2.2
+STOP_WIN_DAILY=20
+STOP_LOSS_DAILY=15
+SIGNALS_URL=https://cheerful-data-glimmer.lovable.app/api/public/signals
+POLL_SECONDS=5
+ALLOWED_ORIGINS=*
+```
 
-## 3. Endpoints
+Depois clique em **Manual Deploy → Clear build cache & deploy**.
 
-| Método | Rota | Descrição |
+## Se ainda aparecer Python 3.14
+
+No Render, adicione obrigatoriamente esta variável:
+
+```env
+PYTHON_VERSION=3.11.9
+```
+
+Depois use **Manual Deploy → Clear build cache & deploy**. Não use só “Deploy latest commit”.
+
+## Teste quando ficar Live
+
+Abra no navegador:
+
+```text
+https://SEU-APP.onrender.com/
+https://SEU-APP.onrender.com/health
+https://SEU-APP.onrender.com/status
+```
+
+Se aparecer JSON, o backend está online. Depois cole essa URL no painel e clique em **Testar conexão**.
+
+## Rotas
+
+| Método | Rota | Função |
 |---|---|---|
-| POST | `/connect` | Loga na IQ |
-| GET  | `/status` | Estado geral |
-| GET  | `/balance` | Saldo atual |
-| POST | `/switch` | `{ "account_type": "REAL" }` |
-| GET  | `/assets` | Ativos abertos + payout |
-| POST | `/buy` | `{ "asset":"EURUSD","direction":"call","stake":1,"expiration":1 }` |
-| GET  | `/result/{id}` | Resultado da ordem |
-| POST | `/autotrade/start` | Liga consumo dos sinais DEMA v7 |
-| POST | `/autotrade/stop` | Desliga |
-| GET  | `/autotrade/status` | P&L + histórico |
+| GET | `/` | Serviço online |
+| GET | `/health` | Teste rápido |
+| POST | `/connect` | Conecta na IQ |
+| GET | `/status` | Status, saldo e P&L |
+| POST | `/switch` | Troca `PRACTICE`/`REAL` |
+| GET | `/assets` | Ativos abertos com payout |
+| POST | `/buy` | Ordem manual |
+| GET | `/result/{order_id}` | Resultado da ordem |
+| POST | `/autotrade/start` | Liga auto-trade |
+| POST | `/autotrade/stop` | Desliga auto-trade |
+| GET | `/autotrade/status` | Histórico e winrate |
 
-## 4. Segurança
+## Aviso
 
-- **Nunca** commite o `.env`. Só o `.env.example`.
-- Use `ACCOUNT_TYPE=PRACTICE` até validar tudo.
-- `STOP_WIN_DAILY` / `STOP_LOSS_DAILY` protegem a banca.
-- `ALLOWED_ORIGINS` restringe CORS: cole a URL do seu painel em produção.
-
-## 5. Integração com o painel
-
-O painel Lovable já expõe `/api/public/signals`. Basta o auto-trade
-apontar pra essa URL (já vem default no `.env.example`).
+Comece sempre em `ACCOUNT_TYPE=PRACTICE`. Só use `REAL` depois de validar conexão, sinais, stake e stops.
