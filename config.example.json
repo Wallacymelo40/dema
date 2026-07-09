@@ -1,0 +1,11 @@
+{
+  "email": "seu_email_aqui",
+  "password": "sua_senha_aqui",
+  "account_type": "PRACTICE",
+  "stake": 1,
+  "asset": "EURUSD-OTC",
+  "expiration_minutes": 1,
+  "max_trades_day": 20,
+  "stop_win": 20,
+  "stop_loss": 10
+}
